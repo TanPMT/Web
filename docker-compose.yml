@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: notes_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: notes_app
+      MYSQL_USER: notes_user
+      MYSQL_PASSWORD: notes_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - notes_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    container_name: notes_php
+    volumes:
+      - ./public:/var/www/html
+      - ./api:/var/www/api
+      - ./config:/var/www/config
+    networks:
+      - notes_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_NAME: notes_app
+      DB_USER: notes_user
+      DB_PASSWORD: notes_password
+      JWT_SECRET: your-secret-key-change-this-in-production
+
+  nginx:
+    image: nginx:alpine
+    container_name: notes_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./public:/var/www/html
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - notes_network
+    depends_on:
+      - php
+
+networks:
+  notes_network:
+    driver: bridge
+
+volumes:
+  mysql_data:

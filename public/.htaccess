@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Redirect API requests
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+
+# Redirect other requests to index.html if file doesn't exist
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

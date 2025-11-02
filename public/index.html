@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App - Like OneNote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .note-card {
+            transition: all 0.3s ease;
+        }
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            margin: 2px;
+            background: #e0e7ff;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-note-sticky text-indigo-600 text-2xl mr-3"></i>
+                    <span class="text-xl font-bold text-gray-800">Notes App</span>
+                </div>
+                <div class="flex items-center" id="navButtons">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in to your account
+                </h2>
+            </div>
+            <form class="mt-8 space-y-6" id="loginForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <input id="loginUsername" name="username" type="text" required 
+                            class="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                            placeholder="Username">
+                    </div>
+                    <div>
+                        <input id="loginPassword" name="password" type="password" required 
+                            class="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                            placeholder="Password">
+                    </div>
+                </div>
+
+                <div class="text-sm text-gray-600">
+                    Default admin credentials: <strong>admin/admin</strong>
+                </div>
+
+                <div>
+                    <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Sign in
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <button type="button" onclick="showSignup()" 
+                        class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Don't have an account? Sign up
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Page -->
+    <div id="signupPage" class="hidden min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Create your account
+                </h2>
+            </div>
+            <form class="mt-8 space-y-6" id="signupForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <input id="signupUsername" name="username" type="text" required 
+                            class="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                            placeholder="Username (min 3 characters)">
+                    </div>
+                    <div>
+                        <input id="signupEmail" name="email" type="email" 
+                            class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                            placeholder="Email (optional)">
+                    </div>
+                    <div>
+                        <input id="signupPassword" name="password" type="password" required 
+                            class="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                            placeholder="Password (min 6 characters)">
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Sign up
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <button type="button" onclick="showLogin()" 
+                        class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Already have an account? Sign in
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <div class="bg-white shadow">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-gray-900">My Notes</h1>
+                    <button onclick="showNewNoteModal()" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
+                        <i class="fas fa-plus mr-2"></i> New Note
+                    </button>
+                </div>
+                <div class="mt-4 flex gap-4">
+                    <input type="text" id="searchInput" placeholder="Search notes..." 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="searchNotes()" 
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Grid -->
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div id="notesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Notes will be populated here -->
+            </div>
+            <div id="emptyState" class="hidden text-center py-12">
+                <i class="fas fa-note-sticky text-gray-300 text-6xl mb-4"></i>
+                <p class="text-gray-500 text-xl">No notes yet. Create your first note!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="noteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold" id="modalTitle">New Note</h3>
+                <button onclick="closeNoteModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form id="noteForm">
+                <input type="hidden" id="noteId">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+                    <input type="text" id="noteTitle" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tags (comma-separated)</label>
+                    <input type="text" id="noteTags" placeholder="work, personal, important"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Content</label>
+                    <textarea id="noteContent" rows="10"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" 
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+                        Save Note
+                    </button>
+                    <button type="button" onclick="closeNoteModal()" 
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

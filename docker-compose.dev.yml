@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: notes_mysql_dev
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: notes_app
+      MYSQL_USER: notes_user
+      MYSQL_PASSWORD: notes_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - notes_network_dev
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    container_name: notes_php_dev
+    volumes:
+      - ./public:/var/www/html
+      - ./api:/var/www/api
+      - ./config:/var/www/config
+    networks:
+      - notes_network_dev
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_NAME: notes_app
+      DB_USER: notes_user
+      DB_PASSWORD: notes_password
+      JWT_SECRET: dev-secret-key
+      APP_ENV: development
+
+  apache:
+    build:
+      context: .
+      dockerfile: Dockerfile.apache
+    container_name: notes_apache_dev
+    ports:
+      - "8080:80"
+    volumes:
+      - ./public:/var/www/html
+      - ./api:/var/www/api
+      - ./config:/var/www/config
+      - ./apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
+    networks:
+      - notes_network_dev
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_NAME: notes_app
+      DB_USER: notes_user
+      DB_PASSWORD: notes_password
+      JWT_SECRET: dev-secret-key
+      APP_ENV: development
+
+networks:
+  notes_network_dev:
+    driver: bridge
+
+volumes:
+  mysql_data_dev:
