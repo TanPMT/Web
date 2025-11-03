@@ -1,26 +1,62 @@
 #!/bin/bash
 
 echo "🚀 Starting Notes App in Development Mode..."
+echo ""
+
+# Detect if Podman or Docker is available
+USE_PODMAN=false
+USE_DOCKER=false
+
+if command -v podman &> /dev/null; then
+    USE_PODMAN=true
+    echo "✓ Detected Podman"
+elif command -v docker &> /dev/null; then
+    USE_DOCKER=true
+    echo "✓ Detected Docker"
+else
+    echo "❌ Neither Podman nor Docker found. Please install one of them."
+    exit 1
+fi
+
+echo ""
+
+# Choose the right compose command and file
+if [ "$USE_PODMAN" = true ]; then
+    COMPOSE_CMD="podman-compose"
+    COMPOSE_FILE="podman-compose.dev.yml"
+    EXEC_CMD="podman"
+    echo "Using Podman Compose..."
+else
+    COMPOSE_CMD="docker-compose"
+    COMPOSE_FILE="docker-compose.dev.yml"
+    EXEC_CMD="docker"
+    echo "Using Docker Compose..."
+fi
 
 # Build and start containers
-podman-compose -f docker-compose.dev.yml up -d
+echo "Building and starting containers..."
+$COMPOSE_CMD -f $COMPOSE_FILE up -d --build
 
 # Wait for MySQL to be ready
+echo ""
 echo "⏳ Waiting for MySQL to be ready..."
-sleep 10
+sleep 15
 
 # Install PHP dependencies
 echo "📦 Installing PHP dependencies..."
-podman exec notes_php_dev composer install
+$EXEC_CMD exec notes_php_dev composer install
 
+echo ""
 echo "✅ Development environment is ready!"
 echo ""
 echo "📝 Access the app at: http://localhost:8080"
 echo "🔐 Default login: admin / admin"
 echo ""
 echo "📊 Container status:"
-podman ps | grep notes
+$EXEC_CMD ps | grep notes
 
 echo ""
-echo "To view logs: podman-compose -f docker-compose.dev.yml logs -f"
-echo "To stop: podman-compose -f docker-compose.dev.yml down"
+echo "Useful commands:"
+echo "  View logs: $COMPOSE_CMD -f $COMPOSE_FILE logs -f"
+echo "  Stop: $COMPOSE_CMD -f $COMPOSE_FILE down"
+echo "  Restart: $COMPOSE_CMD -f $COMPOSE_FILE restart"

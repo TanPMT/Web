@@ -1,0 +1,22 @@
+# PHP Requirements (managed by Composer)
+# See composer.json for PHP dependencies
+
+# Main PHP Dependencies:
+# - PHP 8.2+
+# - firebase/php-jwt: ^6.9 (JWT Authentication)
+# - ext-pdo: PDO extension for database
+# - ext-pdo_mysql: MySQL PDO driver
+# - ext-json: JSON support
+# - ext-mbstring: Multibyte string support
+
+# System Requirements:
+# - Podman or Docker
+# - Podman Compose or Docker Compose
+# - MySQL 8.0+
+# - Nginx (production) or Apache (development)
+
+# To install PHP dependencies:
+# composer install
+
+# To install/update all dependencies:
+# composer update

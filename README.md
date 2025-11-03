@@ -15,69 +15,87 @@
 - ✅ Podman/Docker support (MySQL container)
 - ✅ Nginx + Apache support
 - ✅ Development và Production environments
+- ✅ Auto-detect Podman/Docker trong start scripts
 
 ## Yêu cầu hệ thống
 
-- Podman hoặc Docker
-- Podman Compose hoặc Docker Compose
-- PHP 8.2+
-- MySQL 8.0+
+- **Podman** hoặc **Docker** (scripts tự động detect)
+- **Podman Compose** hoặc **Docker Compose**
+- PHP 8.2+ (trong container)
+- MySQL 8.0+ (trong container)
 
 ## Cài đặt nhanh
 
 ### 1. Development Environment (Apache)
 
+**Với PowerShell (Windows):**
 ```powershell
-# Clone hoặc tải project về
+.\start-dev.ps1
+```
 
-# Chạy với Podman Compose (Development mode với Apache)
-podman-compose -f docker-compose.dev.yml up -d
+**Với Bash (Linux/Mac):**
+```bash
+chmod +x start-dev.sh
+./start-dev.sh
+```
 
-# Hoặc với Docker Compose
-docker-compose -f docker-compose.dev.yml up -d
+**Hoặc thủ công:**
+```powershell
+# Sử dụng Podman
+podman-compose -f podman-compose.dev.yml up -d --build
 
-# Truy cập ứng dụng
-# http://localhost:8080
+# Hoặc Docker
+docker-compose -f docker-compose.dev.yml up -d --build
+
+# Truy cập: http://localhost:8080
 ```
 
 ### 2. Production Environment (Nginx + PHP-FPM)
 
+**Với PowerShell (Windows):**
 ```powershell
-# Chạy với Podman Compose (Production mode với Nginx)
-podman-compose up -d
-
-# Hoặc với Docker Compose
-docker-compose up -d
-
-# Truy cập ứng dụng
-# http://localhost
+.\start-prod.ps1
 ```
 
-## Cài đặt PHP dependencies
-
-```powershell
-# Vào container PHP
-podman exec -it notes_php bash
-
-# Hoặc với Docker
-docker exec -it notes_php bash
-
-# Trong container, chạy:
-composer install
+**Với Bash (Linux/Mac):**
+```bash
+chmod +x start-prod.sh
+./start-prod.sh
 ```
 
-## Database Setup
+**Hoặc thủ công:**
+```powershell
+# Sử dụng Podman
+podman-compose -f podman-compose.yml up -d --build
 
-Database sẽ tự động được khởi tạo khi container MySQL start lần đầu với:
-- Database: `notes_app`
-- User mặc định: admin/admin
-- 2 notes mẫu
+# Hoặc Docker
+docker-compose -f docker-compose.yml up -d --build
+
+# Truy cập: http://localhost
+```
 
 ## Cấu hình
 
+### Compose Files
+
+Project hỗ trợ cả Podman và Docker với các file riêng biệt:
+
+**Podman (recommended):**
+- `podman-compose.yml` - Production với Nginx
+- `podman-compose.dev.yml` - Development với Apache
+- Có thêm SELinux labels (:Z) và security configs cho Podman
+
+**Docker:**
+- `docker-compose.yml` - Production với Nginx  
+- `docker-compose.dev.yml` - Development với Apache
+
+**Start Scripts tự động detect:**
+- `start-dev.ps1` / `start-dev.sh` - Auto-detect và chạy dev mode
+- `start-prod.ps1` / `start-prod.sh` - Auto-detect và chạy production
+
 ### Environment Variables
 
-Chỉnh sửa trong `docker-compose.yml` hoặc `docker-compose.dev.yml`:
+Chỉnh sửa trong compose files hoặc tạo file `.env`:
 
 ```yaml
 environment:
@@ -91,13 +109,46 @@ environment:
 
 ### Ports
 
-**Development (docker-compose.dev.yml):**
+**Development:**
 - Apache: http://localhost:8080
 - MySQL: localhost:3307
 
-**Production (docker-compose.yml):**
+**Production:**
 - Nginx: http://localhost:80
 - MySQL: localhost:3306
+
+## Dependencies
+
+### PHP Dependencies (composer.json)
+
+```json
+{
+    "require": {
+        "php": "^8.2",
+        "firebase/php-jwt": "^6.9",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*"
+    }
+}
+```
+
+Cài đặt tự động qua start scripts, hoặc thủ công:
+```powershell
+# Podman
+podman exec notes_php composer install
+
+# Docker
+docker exec notes_php composer install
+```
+
+### Database Setup
+
+Database tự động khởi tạo khi container MySQL start lần đầu:
+- Database: `notes_app`
+- User mặc định: admin/admin (password đã hash)
+- 2 notes mẫu
 
 ## API Endpoints
 
@@ -134,31 +185,39 @@ DELETE /api/notes/{id}
 
 ```
 .
-├── api/                    # Backend API
-│   ├── index.php          # API router
-│   └── routes/            # API routes
-│       ├── auth.php       # Authentication endpoints
-│       └── notes.php      # Notes CRUD endpoints
-├── config/                # Configuration files
-│   ├── Database.php       # Database connection
-│   ├── Auth.php          # JWT authentication
-│   └── Response.php      # API response helper
-├── database/              # Database files
-│   └── init.sql          # Database initialization
-├── public/                # Frontend
-│   ├── index.html        # Main HTML
+├── api/                       # Backend API
+│   ├── index.php             # API router
+│   └── routes/               # API routes
+│       ├── auth.php          # Authentication endpoints
+│       └── notes.php         # Notes CRUD endpoints
+├── config/                   # Configuration files
+│   ├── Database.php          # Database connection
+│   ├── Auth.php             # JWT authentication
+│   └── Response.php         # API response helper
+├── database/                 # Database files
+│   └── init.sql             # Database initialization
+├── public/                   # Frontend
+│   ├── index.html           # Main HTML
 │   ├── js/
-│   │   └── app.js        # Frontend JavaScript
-│   └── .htaccess         # Apache rewrite rules
-├── nginx/                 # Nginx configuration
+│   │   └── app.js           # Frontend JavaScript
+│   └── .htaccess            # Apache rewrite rules
+├── nginx/                    # Nginx configuration
 │   ├── nginx.conf
 │   └── default.conf
-├── apache/                # Apache configuration
+├── apache/                   # Apache configuration
 │   └── 000-default.conf
-├── docker-compose.yml     # Production setup (Nginx)
-├── docker-compose.dev.yml # Development setup (Apache)
-├── Dockerfile.php         # PHP-FPM image
-└── Dockerfile.apache      # Apache+PHP image
+├── composer.json             # PHP dependencies
+├── requirements.txt          # Documentation of requirements
+├── podman-compose.yml        # Podman production setup
+├── podman-compose.dev.yml    # Podman development setup
+├── docker-compose.yml        # Docker production setup
+├── docker-compose.dev.yml    # Docker development setup
+├── Dockerfile.php            # PHP-FPM image
+├── Dockerfile.apache         # Apache+PHP image
+├── start-dev.ps1            # PowerShell dev start script
+├── start-prod.ps1           # PowerShell prod start script
+├── start-dev.sh             # Bash dev start script
+└── start-prod.sh            # Bash prod start script
 ```
 
 ## Sử dụng
@@ -180,22 +239,27 @@ DELETE /api/notes/{id}
 
 ## Dừng ứng dụng
 
+**Sử dụng scripts:**
 ```powershell
-# Development
-podman-compose -f docker-compose.dev.yml down
+# Podman
+podman-compose -f podman-compose.dev.yml down     # Development
+podman-compose -f podman-compose.yml down         # Production
 
-# Production
-podman-compose down
+# Docker
+docker-compose -f docker-compose.dev.yml down     # Development
+docker-compose -f docker-compose.yml down         # Production
 ```
 
 ## Xóa volumes (reset database)
 
 ```powershell
 # Development
-podman-compose -f docker-compose.dev.yml down -v
+podman-compose -f podman-compose.dev.yml down -v
+docker-compose -f docker-compose.dev.yml down -v
 
 # Production
-podman-compose down -v
+podman-compose -f podman-compose.yml down -v
+docker-compose -f docker-compose.yml down -v
 ```
 
 ## Troubleshooting

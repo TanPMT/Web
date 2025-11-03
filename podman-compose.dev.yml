@@ -2,8 +2,11 @@ version: '3.8'
 
 services:
   mysql:
-    image: mysql:8.0
+    image: docker.io/library/mysql:8.0
     container_name: notes_mysql_dev
+    userns_mode: keep-id
+    security_opt:
+      - label=disable
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: notes_app
@@ -12,8 +15,8 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - mysql_data_dev:/var/lib/mysql
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mysql_data_dev:/var/lib/mysql:Z
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:Z,ro
     networks:
       - notes_network_dev
     healthcheck:
@@ -29,11 +32,14 @@ services:
       dockerfile: Dockerfile.php
     image: notes-php-dev:latest
     container_name: notes_php_dev
+    userns_mode: keep-id
+    security_opt:
+      - label=disable
     volumes:
-      - ./public:/var/www/html
-      - ./api:/var/www/api
-      - ./config:/var/www/config
-      - ./vendor:/var/www/vendor
+      - ./public:/var/www/html:Z
+      - ./api:/var/www/api:Z
+      - ./config:/var/www/config:Z
+      - ./vendor:/var/www/vendor:Z
     networks:
       - notes_network_dev
     depends_on:
@@ -53,14 +59,17 @@ services:
       dockerfile: Dockerfile.apache
     image: notes-apache-dev:latest
     container_name: notes_apache_dev
+    userns_mode: keep-id
+    security_opt:
+      - label=disable
     ports:
       - "8080:80"
     volumes:
-      - ./public:/var/www/html
-      - ./api:/var/www/api
-      - ./config:/var/www/config
-      - ./vendor:/var/www/vendor
-      - ./apache/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+      - ./public:/var/www/html:Z
+      - ./api:/var/www/api:Z
+      - ./config:/var/www/config:Z
+      - ./vendor:/var/www/vendor:Z
+      - ./apache/000-default.conf:/etc/apache2/sites-available/000-default.conf:Z,ro
     networks:
       - notes_network_dev
     depends_on:
